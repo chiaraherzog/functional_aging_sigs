@@ -1,0 +1,50 @@
+group	repository	celltype	accession	n_control	n_case	stage
+OSK reprogramming	NCBI GEO	fibroblast	GSE54848	3	18	validation
+current cancer	TCGA	bile duct	TCGA-CHOL	9	36	validation
+current cancer	TCGA	bladder	TCGA-BLCA	21	418	validation
+current cancer	TCGA	breast	TCGA-BRCA	97	792	validation
+current cancer	EGA	breast	EGAS00001005070	14	28	validation
+current cancer	EGA	cervical sample	EGAS00001005078	313	513	validation
+current cancer	NCBI GEO	cervix	GSE211668	29	101	validation
+current cancer	TCGA	cervix	TCGA-CESC	3	307	validation
+current cancer	TCGA	endometrium	TCGA-UCEC	34	435	validation
+current cancer	TCGA	kidney	TCGA-KIRC	160	324	validation
+current cancer	TCGA	kidney	TCGA-KIRP	45	272	validation
+current cancer	TCGA	liver	TCGA-LIHC	50	376	validation
+current cancer	TCGA	lung	TCGA-LUAD	32	454	validation
+current cancer	TCGA	lung	TCGA-LUSC	42	361	validation
+current cancer	TCGA	lymphoid tissues	TCGA-COAD	38	310	validation
+current cancer	TCGA	oesophagus	TCGA-ESCA	16	185	validation
+current cancer	TCGA	oral region	TCGA-HNSC	50	527	validation
+current cancer	NA	ovary	NA	6	0	validation
+current cancer	TCGA	ovary	TCGA-OV	0	10	validation
+current cancer	TCGA	pancreas	TCGA-PAAD	10	184	validation
+current cancer	TCGA	prostate	TCGA-PRAD	50	502	validation
+current cancer	TCGA	rectum	TCGA-READ	7	97	validation
+current cancer	TCGA	thyroid	TCGA-THCA	56	507	validation
+current cancer;surrogate tissue	EGA	blood sample	EGAS00001005055	208	102	validation
+current cancer;surrogate tissue	EGA	buccal sample	EGAS00001005055	295	294	validation
+current cancer;surrogate tissue	EGA	cervical sample	EGAS00001005033	0	41	discovery (age correlation, controls only)/validation
+current cancer;surrogate tissue	EGA	cervical sample	EGAS00001005045	0	157	discovery (age correlation, controls only)/validation
+current cancer;surrogate tissue	EGA	cervical sample	EGAS00001005055	1094	442	discovery (age correlation, controls only)/validation
+future cancer;surrogate tissue	NA	cervical sample	NA	416	76	validation
+future cancer;tissue at risk	EGA	cervical sample	EGAS00001005078	218	226	validation
+mortality	NA	blood sample	NA	123	29	validation
+mortality	NA	buccal sample	NA	685	100	validation
+proliferation	NCBI GEO	skin, sacrum	GSE197512	6	3	discovery (proliferation assocation)/validation
+response	NCBI GEO	breast	GSE184159	12	20	validation
+risk-increasing exposure	EGA	buccal sample	EGAS00001005055	172	123	validation
+risk-increasing exposure	EGA	cervical sample	EGAS00001005078	214	313	validation
+risk-reducing exposure	EGA	breast	EGAS00001005055	20	20	validation
+senescence	NCBI GEO	adult fibroblast	GSE131280	8	4	discovery (senescence association)/validation
+senescence	NCBI GEO	fetal fibroblast	GSE112812	11	9	discovery (senescence association)/validation
+senescence	NCBI GEO	fetal fibroblast	GSE112873	20	9	discovery (senescence association)/validation
+senescence	NCBI GEO	fetal fibroblast	GSE91069	6	6	discovery (senescence association)/validation
+senescence	NCBI GEO	human umbilical vein endothelial cells	GSE116375	0	4	discovery (senescence association)/validation
+senescence	NCBI GEO	human umbilical vein endothelial cells	GSE82234	3	3	discovery (senescence association)/validation
+senescence	NCBI GEO	mesenchymal stem cells	GSE116375	3	3	discovery (senescence association)/validation
+proliferation	NCBI GEO	iliac vein	GSE197512	12	12	discovery (proliferation association)
+proliferation	NCBI GEO	skin, arm	GSE197512	6	6	discovery (proliferation association)
+mouse methylation	NCBI GEO	mammary gland	GSE236260	18	17	validation
+mouse methylation	NCBI GEO	cervix	GSE236260	18	17	validation
+mouse methylation	NCBI GEO	PBMCs	GSE236260	18	17	validation

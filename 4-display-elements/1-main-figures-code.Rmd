@@ -1,0 +1,544 @@
+---
+title: "Functional dissection of cell type-specific epigenetic changes in aging"
+author: "Main Figures"
+date: ""
+link-citations: true
+output:
+  pdf_document:
+    toc: false
+    latex_engine: xelatex
+header-includes:
+  \usepackage{fontspec}
+  \usepackage[utf8]{inputenc}
+  \setmainfont{Open Sans}
+  \usepackage{pdfpages}
+  \usepackage{graphicx}
+  \newfontfamily\boldf{Open Sans Bold}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+
+# libraries
+library(ggplot2)
+library(dplyr)
+library(ComplexHeatmap)
+library(RColorBrewer)
+library(ggtext)
+library(patchwork)
+library(here)
+library(emojifont)
+library(Cairo)
+
+# colours
+cols <- MetBrewer::met.brewer("Hiroshige", n = 12)
+cols1 <- MetBrewer::met.brewer("Hokusai1", n = 8)
+```
+
+\newcommand\invisiblesection[1]{%
+  \refstepcounter{section}%
+  \addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}%
+  \sectionmark{#1}}
+  
+\newpage
+
+\invisiblesection{Figure 1. Development of cell type-specific functional DNA methylation (DNAme) aging clocks. }
+
+```{r figure1, eval=F}
+
+# Generate panels for figure 1
+
+# b: Overlaps -----------------
+# Load and format table
+dat <- readxl::read_xlsx(here("0-data/Table-S7.xlsx")) |>
+  dplyr::select(-c("Description")) |>
+  tidyr::pivot_longer(-c("Set"),
+                      names_to = "Subset",
+                      values_to = "incl") |>
+  tibble::rowid_to_column("order") |>
+  dplyr::mutate(incl2 = ifelse(incl == "x" & !is.na(incl), "\u2714",
+                               ifelse(incl == "-" & !is.na(incl), "\u2718", NA)),
+                group = case_when(grepl("^AGE", Set) ~ "<b>AGE</b>",
+                                  grepl("^PCGT", Set) ~ "<b>PCGT</b> sites",
+                                  grepl("^SEN", Set) ~ "<b>SEN</b>escence",
+                                  grepl("^PRO", Set) ~ "<b>PRO</b>liferation"),
+                Subset = factor(Subset, levels = c("Aging (all cells)",
+                                                   "Aging (epithelial cells only)",
+                                                   "Aging (immune cells only)",
+                                                   "PCGT sites",
+                                                   "Proliferation-associated CpGs",
+                                                   "Proliferation-associated CpGs (age is correlated positively)",
+                                                   "Proliferation-associated CpGs (age is correlated negatively)",
+                                                   "Senescence-associated CpGs")),
+                set = ifelse(grepl("_neg", Set),
+                             gsub("_neg", "-", Set),
+                             ifelse(grepl("_pos", Set),
+                                    gsub("_pos", "+", Set),
+                                    paste0(Set))))
+
+b <- dat |>
+  ggplot(aes(x = Subset,
+             y = forcats::fct_reorder(set, order),
+             shape = incl2,
+             colour = incl2)) +
+  geom_point(size = 3) +
+  facet_grid(~group, scales = "free_x",
+             space = "free") +
+  scale_shape_identity() +
+  scale_colour_manual(values = cols[c(11, 1)]) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        legend.position = "top",
+        strip.text = element_markdown(hjust = 0),
+        panel.grid.major.x = element_blank(),legend.title = element_blank(),
+        # panel.grid.major.y = element_blank()
+  ) +
+  labs(x = "", y = "") +
+  coord_flip() +
+  scale_x_discrete(limits = rev(levels(dat$Subset)))
+
+
+grDevices::cairo_pdf(here("4-display-elements/panels/1b.pdf"), width = 13, height = 3.5)
+print(b)
+dev.off()
+```
+
+\begin{center}
+\includegraphics[trim=0 0cm 0 0, clip,width=0.8\textwidth]{./main-figure-files/fig1.png}
+\end{center}
+
+\begingroup \boldf Figure 1. Development of cell type-specific functional DNA methylation (DNAme) aging clocks. \endgroup
+
+\newpage
+
+\invisiblesection{Figure 2. Initial assessment of cell type-specific functional DNA methylation (DNAme) aging clocks.}
+
+```{r figure2, eval = F}
+# a Age specific signatures ------------
+load(here("0-data/data_assessment.Rdata"))
+
+a <- data |>
+  dplyr::filter(group == "current cancer;surrogate tissue" & type == "Control" & ((celltype == "blood sample" & ic > 0.9) | (celltype != "blood sample" & ic < 0.2))) |>
+  dplyr::mutate(menopause = factor(menopause, levels = c("Pre", "Post"))) |>
+  tidyr::pivot_longer(cols = c("idx_AGE", "idx_AGEepi", "idx_AGEimm"),
+                      names_to = "index",
+                      values_to = "value") |>
+  dplyr::mutate(index = gsub("idx_", "", index)) |>
+  ggplot(aes(x = age,
+             y = value,
+             colour = celltype)) +
+  geom_point(aes(shape = menopause), size = 0.9) +
+  facet_wrap(celltype~index, scales = "free") +
+  geom_smooth(method = "lm") +
+  ggpubr::stat_cor(label.y.npc = "top", inherit.aes = F, label.x.npc= "left",
+                   aes(x = age, y = value),
+                   method = "spearman") +
+  scale_colour_manual(values = cols[c(1, 3, 8)]) +
+  scale_shape_manual(values = c(19, 5),
+                     name = "Menopausal status") +
+  theme_bw() +
+  theme(legend.position = "top",
+        aspect.ratio = 0.7) +
+  labs(x = "chronological age",
+       y = "score") +
+  guides(colour = "none")
+
+pdf(here("4-display-elements/panels/2a.pdf"), width = 10, height = 6.5)
+print(a)
+dev.off()
+
+# b: Co-correlation --------
+tmp <- data |>
+  dplyr::filter(group == "current cancer;surrogate tissue" & type == "Control" & ((celltype == "blood sample" & ic > 0.9) | (celltype != "blood sample" & ic < 0.2))) |>
+  dplyr::select(idx_AGE:idx_SENpure)
+mat <- cor(tmp, method = "spearman")
+colnames(mat) <- gsub("idx_", "", colnames(mat))
+colnames(mat) <- gsub("_pos", "+", colnames(mat))
+colnames(mat) <- gsub("_neg", "-", colnames(mat))
+rownames(mat) <- gsub("idx_", "", rownames(mat))
+rownames(mat) <- gsub("_pos", "+", rownames(mat))
+rownames(mat) <- gsub("_neg", "-", rownames(mat))
+
+b <- Heatmap(mat,
+        col = circlize::colorRamp2(breaks = c(-1, -0.75, -0.5, -0.25,
+                                              0, 0.25, 0.5, 0.75, 1),
+                                   colors = rev(brewer.pal(name = "RdBu", n = 9))),
+        name = "Correlation",
+        row_names_gp = grid::gpar(fontsize = 10),
+        column_names_gp = grid::gpar(fontsize = 10),
+        cell_fun = function(j, i, x, y, w, h, fill) {
+        if(i >= j) {
+            grid.rect(x, y, w, h, gp = gpar(fill = fill, col = fill))
+        }
+    })
+
+pdf(here("4-display-elements/panels/2b.pdf"), width = 7, height = 6)
+draw(b)
+dev.off()
+
+# Reprogramming -----------------
+load(here("3-evaluation/3-output/data.Rdata"))
+c <- data |>
+  dplyr::filter(group == "OSK reprogramming" & celltype == "fibroblast" & accession != "NA") |>
+  tidyr::pivot_longer(c(idx_AGE:idx_SENpure),
+                         names_to = "index",
+                         values_to = "value") |>
+  dplyr::mutate(index = gsub("idx_", "", index),
+                indexgrp1 = case_when(grepl("^AGE", index) ~ "AGE",
+                                     grepl("^PCGT", index) ~ "PCGT",
+                                     grepl("^SEN", index) ~ "SEN",
+                                     grepl("^PRO", index) & grepl("_neg", index) ~ "PRO (reduction)",
+                                     grepl("^PRO", index) & (grepl("_pos", index)|grepl("PROnonage", index)) ~ "PRO (increase)"),
+                indexgrp2 = case_when(grepl("gen", index) | index == "AGE" ~ "general",
+                                      grepl("epi", index) ~ "epithelial",
+                                      grepl("imm", index) ~ "immune",
+                                      grepl("pure", index) ~ "pure",
+                                      grepl("nonage", index) ~ "nonage"),
+                indexgrp2 = factor(indexgrp2, levels = c("general", "epithelial", "immune", "pure", "nonage")),
+                index = gsub("_neg", "-", index),
+                index = gsub("_pos", "+", index)) |>
+  ggplot(aes(x = as.numeric(t),
+            y = value,
+            colour = index)) +
+  geom_point(size = 0.75,
+             alpha = 0.9) +
+  geom_smooth(alpha = 0.2) +
+  geom_text(aes(x = Inf, y = -Inf,
+                label = index,
+                fontface = "bold"),
+                hjust = 1.05, vjust = -7,
+            check_overlap = T) +
+  # facet_grid(indexgrp1 ~ indexgrp2,
+  #            scales = "free", switch = "y") +
+  ggh4x::facet_grid2(indexgrp1 ~ indexgrp2,
+                     scales = 'free', independent = 'y',
+                     switch = "y") +
+  theme_bw() +
+  theme(legend.position = "none",
+        aspect.ratio = 0.7,
+        axis.text = element_text(size = 6)) +
+  labs(x = "time of reprogramming (days)",
+       y = "score") +
+  scale_colour_manual(values = c(rep(cols[12], 3),
+                                 rep(cols[8], 5),
+                                 rep(cols[3], 9),
+                                 rep(cols[1], 5)))
+
+
+pdf(here("4-display-elements/panels/2c.pdf"), width = 9, height = 13)
+print(c)
+dev.off()
+
+```
+
+\begin{center}
+\includegraphics[trim=0 0cm 0 0, clip,width=0.8\textwidth]{./main-figure-files/fig2.png}
+\end{center}
+
+\begingroup \boldf Figure 2. Initial assessment of cell type-specific functional DNA methylation (DNAme) aging clocks. \endgroup
+
+
+\invisiblesection{Figure 3. Signature association with physiology and disease.}
+
+```{r figure3, eval=F}
+# load dataframes
+load("3-evaluation/4-output/df.Rdata")
+
+# combine them
+dat <- rbind(dat_osk1, dat_prol, dat_sen, dat_age_cerv, dat_age_buccal, dat_age_blood,
+             dat_mort, dat_mort_c, dat_mort_o,
+             dat_cur, dat_cur_adj, dat_prog, 
+             dat_future, dat_hpv, dat_smk, dat_riskred_brca, dat_riskred_wt,
+             dat_cur_sur, 
+             # dat_future_sur,
+             dat_mort_blood, dat_mort_c_blood)
+
+# brng into the right shape for plotting as a matrix
+tmp1 <- dat |>
+  dplyr::mutate(index = gsub("idx_|_adj", "", index),
+                index = gsub("_neg", "-", index),
+                index = gsub("_pos", "+", index),
+                index = gsub("hannum", "Hannum clock", index),
+                index = gsub("horvath", "Horvath clock", index),
+                index = gsub("phenoage", "PhenoAge", index)) |>
+  tidyr::pivot_wider(id_cols = c(group, celltype, type, n_control, n_case),
+                     names_from = "index",
+                     values_from = "auc") |>
+  dplyr::mutate(label = case_when(group == "current cancer" & type == "Cancer" ~ paste0("cancer (", celltype, ")"),
+                                  group == "current cancer" & grepl("CIN", type) ~ paste0(type, " (cervix)"),
+                                  group == "current cancer" & type != "Cancer" & !grepl("CIN", type) ~ paste0(tolower(type), " (breast tissue)"),
+                                  group == "response" ~ "non-complete neo-adjuvant chemotherapy\nresponse",
+                                  type == "HPV positive" ~ paste0("HPV (cervical sample)"),
+                                  type == "Mifepristone (BRCA)" ~ paste0("mifepristone (BRCAmut breast)"),
+                                  type == "Mifepristone (WT)" ~ paste0("mifepristone (WT breast)"),
+                                  grepl("future", group) & !grepl("surrogate", group) ~ "cyt normal, future CIN3+ (cervix)",
+                                  group == "proliferation" ~ paste0(substr(tolower(type), 1, nchar(type)-1), ", ", celltype, ")"),
+                                  group == "senescence" ~ paste0(tolower(type), " (", celltype, ")"),
+                                  grepl("surrogate", group) & grepl("current", group) ~ paste0(tolower(type), " (", celltype, ")"),
+                                  # grepl("surrogate", group) & grepl("future", group) ~ paste0(tolower(type), " (future, ", celltype, ")"),
+                                  grepl("smoker", type, ignore.case = T) ~ paste0(tolower(type), " (buccal sample)"),
+                                  grepl("mortality;all-cause mortality$", group) & celltype == "buccal sample" ~ "all-cause 10-year mortality (buccal sample)",
+                                  grepl("mortality;all-cause mortality$", group) & celltype == "blood sample" ~ "all-cause 10-year mortality (blood sample)",
+                                  grepl("mortality;cancer", group) & celltype == "buccal sample" ~ "cancer-specific 10-year mortality (buccal sample)",
+                                  grepl("mortality;cancer", group) & celltype == "blood sample" ~ "cancer-specific 10-year mortality (blood sample)",
+                                  grepl("mortality;other", group) ~ "non-cancer 10-year mortality (buccal sample)",
+                                  TRUE ~ tolower(type))) |>
+  # dplyr::mutate(label = paste0(label, ", n = ", n)) |>
+  dplyr::mutate(group2 = case_when(group == "current cancer" & grepl("Normal|CIN", type) ~ "pre-cancer or adjacent",
+                                   group == "current cancer" & !grepl("Normal|CIN", type) ~ "current cancer",
+                                   group == "future cancer;tissue at risk" ~ "future cancer",
+                                   grepl("surrogate", group) & grepl("current", group) ~ "surrogate tissue (current cancer)",
+                                   # grepl("surrogate", group) & grepl("future", group) ~ "surrogate tissue (future cancer)",
+                                   grepl("mortality", group) ~ "mortality",
+                                   group == "response" ~ "non-complete neo-adjuvant chemotherapy response",
+                                   TRUE ~ paste0(group)),
+                group3 = case_when(group2 %in% c("OSK reprogramming", "senescence", "proliferation", "normal aging") ~ "reprogramming, aging, and senescence",
+                                   group2 %in% c("current cancer", "pre-cancer or adjacent", "future cancer") ~ "cancer",
+                                   grepl("risk", group2) ~ "exposures",
+                                   group == "response" ~ "cancer",
+                                   grepl("surrogate", group2) ~ "surrogate tissue (cancer)",
+                                   grepl("mortality", group2) ~ "mortality",
+                                   TRUE ~ paste0(group2)),
+                ref = case_when(group %in% c("OSK reprogramming", "proliferation") ~ "Fibroblast",
+                                group == "senescence" & grepl("fibroblast", celltype) ~ stringr::str_to_sentence(celltype),
+                                group == "senescence" & grepl("endothelial", celltype) ~ "HUVEC",
+                                group == "senescence" & grepl("mesenchymal", celltype) ~ "MSC",
+                                group == "normal aging" ~ "Pre-menopausal sample",
+                                 TRUE ~ "Ref"),
+                comp = case_when(group == "OSK reprogramming" ~ "iPSC/ESC",
+                                 group == "proliferation" ~ "Serum withdrawal",
+                                 group == "senescence" & grepl("fibroblast", celltype) ~ type,
+                                 group == "normal aging" ~ "Post-menopausal sample",
+                                 TRUE ~ "Comp"))
+mat1 <- tmp1[,6:30]
+rownames(mat1) <- tmp1$label
+
+# Transform sigmat
+tmp2 <- dat |>
+  dplyr::mutate(index = gsub("idx_|_adj", "", index),
+                index = gsub("_neg", "-", index),
+                index = gsub("_pos", "+", index),
+                index = gsub("hannum", "Hannum clock", index),
+                index = gsub("horvath", "Horvath clock", index),
+                index = gsub("phenoage", "PhenoAge", index)) |>
+  dplyr::rowwise() |>
+  dplyr::mutate(aucsig = ifelse(all(c(auc, cilo, cihi) > 0.5) | all(c(auc, cilo, cihi) < 0.5),
+                                "*",
+                                "")) |>
+  ungroup() |>
+  tidyr::pivot_wider(id_cols = c(group, celltype, type, n_control, n_case),
+                     names_from = "index",
+                     values_from = "aucsig")
+mat2 <- tmp2[,6:30]
+
+cols <- MetBrewer::met.brewer("Hiroshige", n = 12)
+cols1 <- MetBrewer::met.brewer("Hokusai1", n = 9)
+
+hl = rowAnnotation(
+  group = factor(tmp1$group3, levels = c("reprogramming, aging, and senescence",
+                                         "mortality",
+                                         "cancer",
+                                         "exposures",
+                                         "surrogate tissue (cancer)")),
+  type = factor(tmp1$group2, levels = c("OSK reprogramming",
+                                                          "senescence",
+                                                          "proliferation",
+                                                          "normal aging",
+                                        "mortality",
+                                                          "current cancer",
+                                        "non-complete neo-adjuvant chemotherapy response",
+                                                          "pre-cancer or adjacent",
+                                                          "future cancer",
+                                                          "risk-increasing exposure",
+                                                          "risk-reducing exposure",
+                                        "surrogate tissue (current cancer)")),
+                   col = list(group = c("reprogramming, aging, and senescence" = cols1[1],
+                                        "mortality" = cols1[3],
+                                        "cancer" = cols1[5],
+                                        "exposures" = cols1[7],
+                                        "surrogate tissue (cancer)" = cols1[8]),
+                              type = c("OSK reprogramming" = cols[1],
+                                        "senescence" = cols[2],
+                                        "proliferation" = cols[3],
+                                        "normal aging" = cols[4],
+                                       "mortality" = cols[5],
+                                        "current cancer" = cols[6],
+                                       "non-complete neo-adjuvant chemotherapy response" = cols[7],
+                                        "pre-cancer or adjacent" = cols[8],
+                                        "future cancer" = cols[9],
+                                        "risk-increasing exposure" = cols[10],
+                                        "risk-reducing exposure" = cols[11],
+                                       "surrogate tissue (current cancer)" = cols[12]),
+                                  simple_anno_size = unit(0.5, "cm"),
+                                  show_annotation_name = T)
+                )
+
+# anno_n
+hr = rowAnnotation(
+  # `Reference` = anno_text(tmp1$ref,
+  #                                          show_name = T,
+  #                                          gp = grid::gpar(fontsize = 8)),
+                   `Reference (n)` = anno_numeric(tmp1$n_control, width = unit(0.3, "in"),
+                                               align_to = "right",
+                                          labels_gp = grid::gpar(fontsize = 8),rg = c(0, 400),
+                                           bg_gp = gpar(fill = "grey80", col = NA)),
+                   `Comparison (n)` = anno_numeric(tmp1$n_case,  width = unit(0.3, "in"),
+                                            rg = c(0, 400),
+                                          labels_gp = grid::gpar(fontsize = 8),
+                                           bg_gp = gpar(fill = "grey70", col = NA)),
+                   # `Comparison` = anno_text(tmp1$comp,
+                   #                         show_name = T,
+                   #                         gp = grid::gpar(fontsize = 8)),
+                   annotation_name_rot = 90)
+
+map <- Heatmap(as.matrix(mat1),
+        cluster_rows = T,
+        cluster_columns = T,
+        show_row_names = T,
+        cell_fun = function(j, i, x, y, width, height, fill) {
+          grid.text(mat2[i, j], x, y, gp = gpar(fontsize = 10))
+        },
+        col = circlize::colorRamp2(breaks = c(0, 0.125, 0.25, 0.375,
+                                              0.5, 0.625, 0.75, 0.875, 1),
+                                   colors = rev(brewer.pal(name = "RdBu", n = 9))),
+        name = "AUC values",
+        row_names_gp = grid::gpar(fontsize = 8),
+        column_names_gp = grid::gpar(fontsize = 9),
+        row_title_gp = grid::gpar(fontsize = 10),
+        row_split = factor(tmp1$group2, levels = c("OSK reprogramming",
+                                                   "senescence",
+                                                   "proliferation",
+                                                   "normal aging",
+                                                   "mortality",
+                                                    "current cancer",
+                                                   "non-complete neo-adjuvant chemotherapy response",
+                                                      "pre-cancer or adjacent",
+                                                   "future cancer",
+                                                      "risk-increasing exposure",
+                                                      "risk-reducing exposure",
+                                                   "surrogate tissue (current cancer)")),
+        row_gap = unit(c(1, 1, 1, 5, 5, 1, 1, 1, 5, 1, 5, 5), "mm"),
+        show_row_dend = F,
+        row_title = NULL,
+        border = T,
+        left_annotation = hl,
+        right_annotation = hr,
+        cluster_row_slices = F)
+
+grDevices::cairo_pdf(here("4-display-elements/panels/heatmap.pdf"), width = 11, height = 10)
+draw(map)
+dev.off()
+
+# heatmap is annotated in illustrator (labels)
+```
+
+\begin{center}
+\includegraphics[trim=0 0 0 0, clip,width=0.8\textwidth]{./main-figure-files/fig3.png}
+\end{center}
+
+\begingroup \boldf Figure 3. Signature association with physiology and disease. \endgroup
+
+\invisiblesection{Figure 4. Mouse model of carcinogen exposure and prevention with multi-tissue methylation analysis.}
+
+```{r figure4, eval = F}
+# Load mouse data
+load("0-data/dat_assessment_mouse.Rdata")
+
+# Prepare pheno for plotting
+pheno <- pheno |> 
+  # Filter Exp 5 and relevant tissues only
+  dplyr::filter(substudy == "Cancer study" & tissue %in% c("Cervix", "Breast", "PBMCs")) |> 
+  droplevels() |> 
+  # create new type3 variable for plotting              
+  dplyr::mutate(type3 = case_when(treatment == "MPA/DMBA- MIF-" & tumour_status == "No tumor" ~ "Control",
+                                  treatment == "MPA/DMBA+ MIF-" & tumour_status == "Tumor" ~ "Cancer case",
+                                  treatment == "MPA/DMBA+ MIF+" & tumour_status == "No tumor" ~ "Carcinogen exposure with successful preventive measure",
+                                  
+                                  treatment == "MPA/DMBA+ MIF+" & tumour_status == "Tumor" ~ "Carcinogen exposure with unsuccessful preventive measure",
+                                  treatment == "MPA/DMBA- MIF+" & tumour_status == "No tumor" ~ "Preventive measure only"),
+  # relevel type3 for right appearance
+                type3 = factor(type3, levels = c("Control",
+                                                 "Cancer case",
+                                                 "Carcinogen exposure with unsuccessful preventive measure",
+                                                 "Carcinogen exposure with successful preventive measure",
+                                                 "Preventive measure only")),
+  # fix tissue
+  tissue = case_when(tissue == "Breast" ~ "mammary gland",
+                     tissue == "Cervix" ~ "cervix",
+                     tissue == "PBMCs" ~ "PBMCs"),
+  tissue = factor(tissue, levels = c("mammary gland", "cervix", "PBMCs"))) |> 
+  dplyr::rename(mPCGTgen = idx_mPCGTgen,
+                mPCGTnonage = idx_mPCGTnonage) |> 
+  tidyr::pivot_longer(cols = c("mPCGTgen", "mPCGTnonage"),
+                      names_to = "index",
+                      values_to = "value") 
+
+theme_set(
+  theme_bw() +
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        legend.position = 'right')
+)
+
+plot <- pheno |>
+  ggplot(
+    aes(x=type3, y=value)
+    ) +
+  ggbeeswarm::geom_beeswarm(
+    aes(colour = type3,
+        shape = tumour_status),
+    size = 2
+    ) +
+  geom_boxplot(
+    aes(fill = type3),
+    alpha = 0.7,
+    outlier.shape = NA
+    ) +
+  facet_grid(
+    index~tissue,
+    switch = "y",
+    scales = "free_y"
+    ) +
+  ggpubr::stat_compare_means(
+    label.x.npc = 0.1,
+    size = 3
+    # comparisons = list(c("Control", "Cancer case"),
+    #                    c("Carcinogen exposure with unsuccessful preventive measure", "Carcinogen exposure with successful preventive measure"),
+    #                    c("Cancer case", "Carcinogen exposure with successful preventive measure"),
+    #                    c("Control", "Preventive measure only")
+    #                    )
+    # ,
+    #                    c("Cancer case", "Carcinogen exposure with successful prevention"),
+    #                    c("Control", "Preventive measure only"))
+  ) +
+  labs(
+    x = "",
+    y = ""
+  ) +
+  scale_colour_manual(
+    values = cols1[c(8, 1, 4, 6, 7)],
+    aesthetics = c("colour", "fill"),
+    name = ""
+    ) +
+  scale_shape_manual(
+    values = c(1, 19),
+    name = ""
+  ) +
+  guides(color = guide_legend(nrow = 5),
+         shape = guide_legend(nrow = 2)) +
+  theme(
+    aspect.ratio = 1.3
+  )
+
+plot
+
+grDevices::cairo_pdf(file = here("4-display-elements/panels/4b.pdf"),
+       width = 13, 
+       height = 5)
+print(plot)
+dev.off()
+```
+
+
+\begin{center}
+
