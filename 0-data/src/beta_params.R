@@ -5,6 +5,9 @@ beta_params <- function(beta){
   source("0-data/src/hannum_clock.R")
   source("0-data/src/horvath_clock.R")
   source("0-data/src/PhenoAge.R")
+  source("0-data/src/GrimAgeV2.R")
+  source("0-data/src/CausalClocks.R")
+  require(wateRmelon)
   
   # Compute IC
   out.l <- epidish(beta.m = beta,
@@ -22,17 +25,27 @@ beta_params <- function(beta){
                      method = 'RPC',
                      maxit = 500)
   
+  # Predict sex
+  sex <- suppressWarnings(suppressMessages(estimateSex(beta)$predicted_sex))
+  sexVar <- ifelse(sex == 'Female', 'f', 'm')
+  
   # Compute PROSENPCGT_age
   prosenpcgt <- PROSENPCGT_age(beta)
   hannum <- hannum_clock(beta)$index_primary
   horvath <- horvath_clock(beta)
   phenoage <- PhenoAge(beta)
+  grimage <- GrimAgeV2(beta = beta,
+                       sex = sexVar,
+                       age = horvath, sub_coefs = F)
+  causal <- CausalClocks(beta)
+  
   
   # Merge
   tmp <- cbind(as.data.frame(prosenpcgt),
                hannum,
                horvath,
                phenoage,
+               grimage, causal,
                ic,
                frac.m)
   

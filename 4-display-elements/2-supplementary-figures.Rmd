@@ -1,5 +1,5 @@
 ---
-title: "Functional epigenetic clocks reveal system-discordant tissue aging in individuals with cancer"
+title: "Functionally enriched epigenetic clocks reveal tissue-specific discordant aging patterns in individuals with cancer"
 author: "Supplementary Information"
 date: ""
 link-citations: true
@@ -35,8 +35,6 @@ cols <- MetBrewer::met.brewer("Hiroshige", n = 12)
 cols1 <- MetBrewer::met.brewer("Hokusai1", n = 8)
 ```
 
-\newpage
-
 \tableofcontents
 
 \newcommand\invisiblesection[1]{%
@@ -50,6 +48,13 @@ cols1 <- MetBrewer::met.brewer("Hokusai1", n = 8)
 
 ```{r fig.s1.senescence, fig.width = 10, fig.height = 14, eval = F}
 load(here("1-functional-association/1-senescence/3-output/coef.Rdata"))
+df <- df |> dplyr::mutate(padj = p.adjust(p, method = 'fdr'),
+                          sig = ifelse(padj < 0.05, 'yes', NA))
+
+# sig <- df[df$sig == 'yes' & !is.na(df$sig),]
+# min(abs(sig$coef))
+# mean(abs(sig$coef))
+
 
 a <- df |>
   ggplot(aes(x = p)) +
@@ -112,7 +117,7 @@ d <- pheno |>
   scale_color_manual(values = colorRampPalette(cols1)(13), name = "tissue") +
   labs(x = "weighted senescence CpG methylation", y = "log2(<i>CDKN2A</i> mRNA expression)")
 
-plot <- ((a|b)/c/(d+plot_spacer())) + plot_annotation(tag_levels = 'A')
+plot <- ((a|b)/c/(d+plot_spacer())) + plot_annotation(tag_levels = 'a')
 print(plot)
 
 ggsave(plot, file = here("4-display-elements/panels/figs1.pdf"),
@@ -123,7 +128,7 @@ ggsave(plot, file = here("4-display-elements/panels/figs1.pdf"),
 \includegraphics[trim=0 0cm 0 0, clip,width=0.7\textwidth]{./panels/figs1.pdf}
 \end{center}
 
-\begingroup \boldf Figure S1. Identification of senescence-associated CpGs. A \endgroup Histogram of p values for differential methylation analysis of senescence status, accounting for dataset and cell type. \textbf{B} Coefficient for association with methylation value by time reveals more loss than gain in methylation with senescence. \textbf{C} The weighted senescence methylation score is elevated in all senescence datasets used for development of the signature. Boxplot indicates median and interquartile range with overlaid individual data points. P values were computed comparing control and senescent cells using a two-sided Wilcoxon test. \textbf{D} The weighted senescence methylation score is positively correlated with mRNA expression of the key senescence-associated gene \textit{CDKN2A} (p16) in 8/13 evaluated normal tissues with matched methylation and mRNA expression data from TCGA (individual data points are plotted). Correlation coefficient is Pearson's rho.
+\begingroup \boldf Figure S1. Identification of senescence-associated CpGs. a\endgroup Histogram of p values for differential methylation analysis of senescence status, accounting for dataset and cell type. \textbf{b} Coefficient for association with methylation value by time reveals more loss than gain in methylation with senescence. \textbf{c} The weighted senescence methylation score is elevated in all senescence datasets used for development of the signature. Boxplot indicates median and interquartile range with overlaid individual data points. P values were computed comparing control and senescent cells using a two-sided Wilcoxon test. \textbf{d} The weighted senescence methylation score is positively correlated with mRNA expression of the key senescence-associated gene \textit{CDKN2A} (p16) in 5/13 with p < 0.05 evaluated normal tissues with matched methylation and mRNA expression data from TCGA (individual data points are plotted). Correlation coefficient is Pearson's rho.
 
 \newpage
 
@@ -183,7 +188,7 @@ d <- pheno |>
   scale_color_manual(values = colorRampPalette(cols1)(13), name = "tissue") +
   labs(x = "weighted proliferation CpG methylation", y = "log2(<i>MK67</i> mRNA expression)")
 
-plot <- ((a|b)/c/(d+plot_spacer())) + plot_annotation(tag_levels = 'A')
+plot <- ((a|b)/c/(d+plot_spacer())) + plot_annotation(tag_levels = 'a')
 print(plot)
 
 ggsave(plot, file = here("4-display-elements/panels/figs2.pdf"),
@@ -194,55 +199,14 @@ ggsave(plot, file = here("4-display-elements/panels/figs2.pdf"),
 \includegraphics[trim=0 0cm 0 0, clip,width=0.8\textwidth]{./panels/figs2.pdf}
 \end{center}
 
-\begingroup \boldf Figure S2. Identification of proliferation-associated CpGs. A \endgroup Histogram of p values for differential methylation analysis of (reduced) proliferation status, accounting for tissue type and subexperiment (mitomycin C or serum withdrawal). \textbf{B} Coefficient for association with methylation value by time reveals more gain than loss of methylation with reduced proliferation \textbf{C} The weighted proliferation methylation score is consistently reduced with reduced proliferation across subexperiments in the dataset used to identify sites. \textbf{D} The weighted proliferation methylation score is positively correlated with mRNA expression of the key proliferation-associated gene \textit{MKI67} (ki67) in 9/13 evaluated normal tissues with matched methylation and mRNA expression data from TCGA. Correlation coefficient is Pearson's rho.
+\begingroup \boldf Figure S2. Identification of proliferation-associated CpGs. a\endgroup Histogram of p values for differential methylation analysis of (reduced) proliferation status, accounting for tissue type and subexperiment (mitomycin C or serum withdrawal). \textbf{b} Coefficient for association with methylation value by time reveals more gain than loss of methylation with reduced proliferation \textbf{c} The weighted proliferation methylation score is consistently reduced with reduced proliferation across subexperiments in the dataset used to identify sites. \textbf{D} The weighted proliferation methylation score is positively correlated with mRNA expression of the key proliferation-associated gene \textit{MKI67} (ki67) in 9/13 evaluated normal tissues with matched methylation and mRNA expression data from TCGA. Correlation coefficient is Pearson's rho.
 
 \newpage
 
-\invisiblesection{Figure S3. Association of new clocks with age.}
 
-```{r fig.s3, eval = F}
-load(here("3-evaluation/3-output/data.Rdata"))
+\invisiblesection{Figure S3. Representative examples of CpG sites passing cell type-specific criteria.}
 
-tmp <- data |>
-  dplyr::filter(group == "current cancer;surrogate tissue" & type == "Control") |>
-  dplyr::mutate(icgrp = ifelse(celltype %in% c("cervical sample") & ic < 0.2, "epithelial fraction",
-                               ifelse(celltype == "blood sample", "immune fraction", NA))) |>
-  dplyr::filter(!is.na(icgrp)) |>
-  tidyr::pivot_longer(idx_AGE:phenoage,
-                      names_to = "index",
-                      values_to = "value") |>
-  dplyr::mutate(index = gsub("idx_", "", index),
-                index = gsub("_neg", "-", index),
-                index = gsub("_pos", "+", index))
-
-plot <- tmp |>
-  ggplot(aes(x = age,
-             y = value)) +
-  geom_point(size = 0.55) +
-  geom_smooth(method = "lm", se = F) +
-  facet_wrap(icgrp ~ index,
-             scales = "free_y") +
-  ggpubr::stat_cor(size = 2.2,
-                   colour = "blue") +
-  theme_bw() +
-  labs(x = "age",
-       y = "score")
-
-ggsave(plot, file = here("4-display-elements/panels/figs3.pdf"),
-       width = 12, height = 14)
-```
-
-\begin{center}
-\includegraphics[trim=0 0cm 0 0, clip,width=0.9\textwidth]{./panels/figs3.pdf}
-\end{center}
-
-\begingroup \boldf Figure S3. Correlation of clocks with age. \endgroup Clocks were correlated with age in epithelial cells (cervical or buccal samples with an inferred immune cell proportion of less that 20\%) or immune cells (blood samples) used to derive the signatures. Correlation coefficient is Pearson's rho.
-
-\newpage
-
-\invisiblesection{Figure S4. Representative examples of CpG sites passing cell type-specific criteria.}
-
-```{r fig.s4.age, fig.width = 4.75, fig.height = 9, eval = F}
+```{r fig.s3.age, fig.width = 4.75, fig.height = 9, eval = F}
 load(here("2-age-association/3-output/pheno_examples.Rdata"))
 pheno2 <- pheno2 |>
   dplyr::mutate(icgrp = ifelse(icgrp == "epithelial", "epithelial fraction", "immune fraction"))
@@ -283,20 +247,358 @@ c <- pheno2 |>
   labs(y = "cg20786223",
        title = "Immune age-related CpG")
 
-plot <- (a/b/c) + plot_annotation(tag_levels = "A")
-ggsave(plot, file = "4-display-elements/panels/figs4.pdf", width = 4.75, height = 9)
+plot <- (a/b/c) + plot_annotation(tag_levels = "a")
+ggsave(plot, file = "4-display-elements/panels/figs3.pdf", width = 4.75, height = 9)
 ```
 
-\includegraphics[trim=0 0cm 0 0, width=0.6\textwidth]{./panels/figs4.pdf}
+\includegraphics[trim=0 0cm 0 0, width=0.6\textwidth]{./panels/figs3.pdf}
 
-\begingroup \boldf Figure S4. Representative examples of CpG sites passing cell type-specific criteria. A \endgroup CpG correlated with chronological age in both epithelial (cervical and buccal samples with less than 20\% inferred immune cell proportion) and immune cells (blood), \textbf{B} only epithelial cells, or \textbf{c} only immune cells. Correlation coefficient is Pearson's rho.
+\begingroup \boldf Figure S3. Representative examples of CpG sites passing cell type-specific criteria. a\endgroup CpG correlated with chronological age in both epithelial (cervical and buccal samples with less than 20\% inferred immune cell proportion) and immune cells (blood), \textbf{b} only epithelial cells, or \textbf{c} only immune cells. Correlation coefficient is Pearson's rho.
+
+\invisiblesection{Figure S4. Overlaps of age-, proliferation-, senescence-, and PCGT-associate CpGs.}
+
+```{r fig.s4, eval = F}
+library(ComplexUpset)
+library(ggvenn)
+library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
+library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+library(dplyr)
+
+# 1. Load age related CpGs + double check any chrX genes are removed.
+anno_epic <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
+anno_450k <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+chrX_Y <- unique(c(anno_epic[anno_epic$chr%in% c("chrX", "chrY"),]$Name,
+                   anno_450k[anno_450k$chr%in% c("chrX", "chrY"),]$Name))
+
+f <- list.files("2-age-association/3-output/")
+f <- f[f != "pheno_examples.Rdata"]
+
+for (i in f){
+  get(load(paste0("2-age-association/3-output/", i))) |>
+    dplyr::filter(!cg %in% chrX_Y)
+}
+
+# Senescence
+load("1-functional-association/1-senescence/3-output/coef.Rdata")
+sen <- df |> 
+  dplyr::filter(!cg %in% chrX_Y) |> 
+  dplyr::mutate(padj = p.adjust(p, method = "fdr")) |> 
+  dplyr::filter(padj < 0.05)
+
+# PCGT
+load("1-functional-association/3-pcgt/1-output/pcgt_cpgs_tss200_fetalzero.Rdata")
+pcgt <- pcgt_cpgs_tss200_fetalzero |> 
+  as.data.frame() |> 
+  dplyr::filter(!Name %in% chrX_Y)
+nrow(pcgt) # 2577 CpGs
+rm(pcgt_cpgs_tss200_fetalzero);gc()
+
+# Proliferation
+load("1-functional-association/2-proliferation/3-output/coef.Rdata")
+pro <- df |> 
+  dplyr::filter(!cg %in% chrX_Y) |> 
+  dplyr::mutate(padj = p.adjust(p, method = "fdr")) |> 
+  dplyr::filter(padj < 0.05) |> 
+  # invert coefficient so direction is more intuitive
+  dplyr::mutate(coef = coef*-1)
+
+# A- venn diagram
+cgs <- list(`PCGT CpGs` = pcgt$Name,
+            `Proliferation-associated CpGs` = pro$cg,
+            `Senescence-associated CpGs` = sen$cg)
+
+a <- ggvenn(cgs,
+            stroke_size = 0.2,
+            text_size = 3,
+            set_name_size = 3,
+            fill_color = cols[c(1, 4, 7)])
+
+# Length of groups
+coefs <- as.list(list.files("3-evaluation/1-output", full.names = T, pattern = "*.Rds"))
+lengths <- do.call(rbind, lapply(coefs, function(x){
+  
+  data.frame(index = gsub(".Rds", "", basename(x)),
+             l = length(readRDS(x)))
+}))
+
+b <- lengths |>
+  dplyr::mutate(index = gsub("_pos", "+", index),
+                index = gsub("_neg", "-", index),
+                index = as.factor(index),
+                index = factor(index, levels = rev(levels(index)))) |> 
+  ggplot(aes(x = log(l),
+             y = index)) +
+  geom_col(fill = cols[12]) +
+  theme_classic() +
+  theme(axis.ticks.y = element_blank()) +
+  coord_cartesian(expand = F) +
+  labs(x = 'log(number of CpGs)',
+       y = '')
+
+
+# UpSet plot
+general <- general$cg
+epi <- epithelial$cg
+immune <- immune$cg
+nonage <- nonage$cg
+pro <- pro$cg
+pcgt <- pcgt$Name
+sen <- sen$cg
+
+# Create a data frame to represent set membership
+all_names <- unique(c(general, epi, immune, nonage, pro, pcgt, sen))
+data <- data.frame(
+  Name = all_names,
+  All_age = all_names %in% general,
+  Epithelial_age = all_names %in% epi,
+  Immune_age = all_names %in% immune,
+  Non_age = all_names %in% nonage,
+  Proliferation = all_names %in% pro,
+  PCGT = all_names %in% pcgt,
+  Senescence = all_names %in% sen
+)
+
+# Plot an upset plot with ComplexUpset
+upset_plot <- upset(
+  data,
+  base_annotations=list(
+    'Intersection size'=intersection_size(
+      text=list(
+        vjust=0.5,
+        hjust=-0.2,
+        angle=90,
+        size = 2.8
+      )
+    )
+  ),
+  set_sizes=(
+    upset_set_size()
+    + theme(axis.text.x=element_text(angle=90,
+                                     size = 8))
+  ),
+  intersect = c('All_age', 'Epithelial_age', 'Immune_age',
+                'Non_age', 'Proliferation', 'PCGT', 'Senescence'),
+  name = "Group of CpGs",
+  width_ratio = 0.1,
+  min_size = 0
+)
+
+library(patchwork)
+plot <- ((a|b)/upset_plot) + plot_annotation(tag_levels = 'a')
+
+
+pdf("4-display-elements/panels/figs4.pdf", width = 8, height = 10)
+print(plot)
+dev.off()
+```
+
+\begin{center}
+\includegraphics[trim=0 0cm 0 0, clip,width=0.7\textwidth]{./panels/figs4.pdf}
+\end{center}
+
+\begingroup \boldf Figure S4. Overlaps of age-, proliferation-, senescence-, and PCGT-associate CpGs. a\endgroup Venn diagram of CpGs associated with senescence, proliferation (both at FDR-adjusted p<0.05), or PCGTs. \textbf{b} Size of Clocks (number of CpGs). \textbf{c} UpSet plot of age-, proliferation-, senescence, and PCGT-associated CpGs. 
+
+\newpage
+
+\invisiblesection{Figure S5. Association of new clocks with age.}
+
+```{r fig.s5, eval = F}
+load(here("3-evaluation/3-output/data.Rdata"))
+
+tmp <- data |>
+  dplyr::filter(group == "current cancer;surrogate tissue" & type == "Control") |>
+  dplyr::mutate(icgrp = ifelse(celltype %in% c("cervical sample") & ic < 0.2, "epithelial fraction",
+                               ifelse(celltype == "blood sample", "immune fraction", NA))) |>
+  dplyr::filter(!is.na(icgrp)) |>
+  dplyr::select(-AgeAccelGrimV2) |> 
+  tidyr::pivot_longer(idx_AGE:CausAge,
+                      names_to = "index",
+                      values_to = "value") |>
+  dplyr::mutate(index = gsub("idx_", "", index),
+                index = gsub("_neg", "-", index),
+                index = gsub("_pos", "+", index))
+
+library(ggh4x)
+
+stripcol <- strip_themed(background_x = elem_list_rect(fill = c(rep(c(cols[2], cols[5]), each = 29))))
+
+
+plot <- tmp |>
+  ggplot(aes(x = age,
+             y = value)) +
+  geom_point(size = 0.55) +
+  geom_smooth(method = "lm", se = F) +
+  facet_wrap2(icgrp ~ index,
+             scales = "free_y",
+             strip = stripcol) +
+  ggpubr::stat_cor(size = 2.2,
+                   colour = "blue",
+                   method = 'spearman') +
+  theme_bw() +
+  labs(x = "chronological age",
+       y = "clock")
+
+pdf(here("4-display-elements/panels/figs5.pdf"), width = 12, height = 16)
+print(plot)
+dev.off()
+
+ggsave(plot, file = here("4-display-elements/panels/figs5.pdf"),
+       width = 12, height = 16)
+```
+
+\begin{center}
+\includegraphics[trim=0 0cm 0 0, clip,width=0.9\textwidth]{./panels/figs5.pdf}
+\end{center}
+
+\begingroup \boldf Figure S5. Correlation of clocks with age. \endgroup Clocks were correlated with age in epithelial cells (cervical or buccal samples with an inferred immune cell proportion of less that 20\%) or immune cells (blood samples) used to derive the signatures. Correlation coefficient is Pearson's rho.
 
 \newpage
 
 
-\invisiblesection{Figure S5. Idenfication of PCGT CpG sites in mice and age-related CpGs in BALB/c mice.}
+\invisiblesection{Figure S6. Principal component analysis of mouse tissue DNAm data.}
 
-```{r figs5, eval = F}
+```{r figs6, eval = F}
+load('0-data/dat_assessment_mouse.Rdata')
+
+p <- pheno |> 
+  dplyr::filter(substudy == 'Age study')|> 
+  ggplot(aes(x = PC1,
+             y = PC2,
+             colour = tissue)) +
+  geom_point(size = 2.5,
+             alpha = 0.8) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  scale_colour_manual(values = colorRampPalette(cols)(10))
+
+cairo_pdf("4-display-elements/panels/figs6.pdf",width = 7, height = 4.5)
+print(p)
+dev.off()
+```
+
+\includegraphics{./panels/figs6.pdf}
+
+\begingroup \boldf Figure S6. Principal component analysis of mouse tissue DNAm data. \endgroup The first two principal components of the top 30,000 variable CpGs are shown for the age study.
+
+\newpage
+\invisiblesection{Figure S7. Representative AUCs for clock values higher or lower than in reference group in the TCGA-BRCA set.}
+
+```{r figs7, eval = F}
+load("3-evaluation/3-output/data.Rdata")
+dat <- data |> dplyr::mutate(type = factor(type, levels = c("Control", "Cancer"))) |> dplyr::filter(project == 'TCGA-BRCA')
+
+library(gghalves)
+library(pROC)
+library(ggtext)
+
+a <- dat |>
+  ggplot(aes(x = type,
+             y = idx_PROpure_neg)) +
+  geom_half_boxplot(aes(fill = type),
+                    alpha = 0.2,
+                    outlier.shape = NA) +
+  geom_half_point_panel(alpha = 0.5, aes(colour = type),
+                        size = 0.3) +
+  theme_bw() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.y = element_markdown(),
+        plot.subtitle = element_markdown()) +
+  labs(x = '', y = paste0('<b style="color:', cols[2], '">PROpure+</b>'),
+       subtitle = paste0('Value <b style="color:', cols[2], '">higher</b><br>than in controls')) +
+  scale_colour_manual(values = cols[c(9, 1)],
+                      aesthetics = c("colour", "fill"))
+
+b <- dat |>
+  ggplot(aes(x = type,
+             y = idx_PROepi_neg)) +
+  geom_half_boxplot(aes(fill = type),
+                    alpha = 0.2,
+                    outlier.shape = NA) +
+  geom_half_point_panel(alpha = 0.5, aes(colour = type),
+                        size = 0.3) +
+  theme_bw() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.y = element_markdown(),
+        plot.subtitle = element_markdown()) +
+  labs(x = '', y = paste0('<b style="color:', cols[12], '">PROepi-</b>'),
+       subtitle = paste0('Value <b style="color:', cols[12], '">lower</b><br>than in controls')) +
+  scale_colour_manual(values = cols[c(9, 1)],
+                      aesthetics = c("colour", "fill"))
+
+
+plot <- (a|b) + plot_annotation(tag_levels = 'a') + plot_layout(guides = 'collect')
+
+# AUCs
+library(pROC)
+
+auc1 <- roc(dat$type, dat$idx_PROpure_neg, direction = "<")
+pos <- data.frame(x = 'positive',
+                  sens = auc1$sensitivities,
+                  spec = auc1$specificities)
+
+auc2 <- roc(dat$type, dat$idx_PROepi_neg, direction = "<")
+pos2 <- data.frame(x = 'negative',
+                  sens = auc2$sensitivities,
+                  spec = auc2$specificities)
+
+pos <- rbind(pos, pos2)
+
+c <- pos |>
+  ggplot(aes(x = 1-spec,
+             y = sens,
+             colour = x)) +
+  geom_path(size = 0.8) +
+  geom_abline(slope = 1, intercept = 0,
+              colour = 'grey60',
+              linetype = 'dashed') +
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        legend.position = 'none') + 
+  labs(x = '1-Specificity',
+       y = 'Sensitivity') +
+  scale_colour_manual(values = cols[c(12, 2)],
+                      name = '')
+
+
+plot2 <- (plot / c) + 
+  plot_annotation(tag_levels = 'a')
+
+ggsave(filename = '4-display-elements/panels/figs7.pdf',
+       plot = plot2,
+       width = 6, height = 7,
+       dpi = 600)
+
+
+
+# # Animations -----
+# source("0-data/src/create_auc_animation.R")
+# dat_path <-"3-evaluation/3-output/data.Rdata"
+# positiveAUC <- create_auc_animation(data_path = dat_path,
+#                                     index_col = 'idx_PROpure_neg',
+#                                     idx_label = 'PROpure-',
+#                                     output_filename = "4-display-elements/panels/positiveAUC.gif",
+#                                     width = 400, height = 400,
+#                                     col = cols[12])
+# negativeAUC <- create_auc_animation(data_path = dat_path,
+#                                     index_col = 'idx_PROepi_neg',
+#                                     idx_label = 'PROepi-',
+#                                     output_filename = "4-display-elements/panels/negativeAUC.gif",
+#                                     width = 400, height = 400,
+#                                     col = cols[2])
+
+```
+
+\includegraphics[trim=0 0cm 0 0, width=0.6\textwidth]{./panels/figs7.pdf}
+
+\begingroup \boldf Figure S7. Representative AUCs for clock values higher or lower than in reference group in the TCGA-BRCA set. a \endgroup PROpure- exhibits higher valus in the comparison group (cancer tissue) than in the reference group (control tissue), whereas \textbf{b} PROepi- exhibits lower values of the clock in the comparison group (cancer tissue) than in the reference group (control tissue). \textbf{c} AUC diagram illustrating high and low values. An AUC value of 0.5 would indicate no distinction. 
+
+\newpage
+
+\invisiblesection{Figure S8. Idenfication of PCGT CpG sites in mice and age-related CpGs in BALB/c mice.}
+
+```{r figs8, eval = F}
 # A - PCGTs ------------------
 # Load paper data and filter single occupancy
 dat <- readxl::read_xls("0-data/files/mmc10.xls", skip = 1, col_types = "text")
@@ -356,6 +658,7 @@ liu_pred <- readxl::read_xls("0-data/files/prop-score-pcgt.xls", skip = 1) |>
   janitor::clean_names() |> 
   dplyr::mutate(selected = ifelse(gene_name %in% pcgt_cpgs_tss200_fetalzero$GeneName_NCBI, "pcgt selected", "not selected"))
 
+rain_height = 0.4
 
 b <- liu_pred |> 
   ggplot(aes(x = 1, y = predicted_propensity_score, fill = selected)) +
@@ -465,255 +768,246 @@ f <- pheno |>
   theme(aspect.ratio = 1)
 
 plot <- (a|b)/(c|d)/(e)/(f) +
-  plot_annotation(tag_levels = 'A')
+  plot_annotation(tag_levels = 'a')
 
-cairo_pdf("4-display-elements/panels/figs5.pdf",width = 12, height = 15)
+cairo_pdf("4-display-elements/panels/figs8.pdf",width = 12, height = 15)
 print(plot)
 dev.off()
 ```
 
-\includegraphics{./panels/figs5.pdf}
+\includegraphics{./panels/figs8.pdf}
 
-
-\begingroup \boldf Figure S5. Idenfication of PCGT sites and age-related CpGs in BALB/c mice. A \endgroup Unique murine PCGT orthologs and their coverage on the mouse methylation array. \begingroup \boldf B \endgroup Plot of the Liu \textit{et al.} propensity score of genes that were selected as PCGT genes or not selected as PCGT genes in the current study. \begingroup \boldf C \endgroup P value histogram for association of age with beta methylation levels after correcting for tissue type. \begingroup \boldf D \endgroup Overlap of all unique PCGT orthologs covered on the mouse methylation array with sites covered in age-related mouse PCGTgen (mPCGTgen) or non-age-related mPCGTnonage sites. \begingroup \boldf E \endgroup Methylation levels in various tissues in example sites for age-associated or non-age-associated CpGs covered in mPCGTgen and mPCGTnonage, respectively. \begingroup \boldf F \endgroup Mean methylation levels in various tissues for mPCGTgen and mPCGTnonage index.
+\begingroup \boldf Figure S8. Idenfication of PCGT sites and age-related CpGs in BALB/c mice. a \endgroup Unique murine PCGT orthologs and their coverage on the mouse methylation array. \begingroup \boldf b \endgroup Plot of the Liu \textit{et al.} propensity score of genes that were selected as PCGT genes or not selected as PCGT genes in the current study. \begingroup \boldf c \endgroup P value histogram for association of age with beta methylation levels after correcting for tissue type. \begingroup \boldf d \endgroup Overlap of all unique PCGT orthologs covered on the mouse methylation array with sites covered in age-related mouse PCGTgen (mPCGTgen) or non-age-related mPCGTnonage sites. \begingroup \boldf e \endgroup Methylation levels in various tissues in example sites for age-associated or non-age-associated CpGs covered in mPCGTgen and mPCGTnonage, respectively. \begingroup \boldf F \endgroup Mean methylation levels in various tissues for mPCGTgen and mPCGTnonage index.
 
 \newpage
 
-\invisiblesection{Figure S6. Principal component analysis of mouse tissue DNAm data.}
 
-```{r figs6, eval = F}
-load('0-data/dat_assessment_mouse.Rdata')
 
-p <- pheno |> 
-  dplyr::filter(substudy == 'Age study')|> 
-  ggplot(aes(x = PC1,
-             y = PC2,
-             colour = tissue)) +
-  geom_point(size = 2.5,
-             alpha = 0.8) +
-  theme_bw() +
-  theme(panel.grid = element_blank()) +
-  scale_colour_manual(values = colorRampPalette(cols)(10))
 
-cairo_pdf("4-display-elements/panels/figs6.pdf",width = 7, height = 4.5)
-print(p)
-dev.off()
-```
 
-\includegraphics{./panels/figs6.pdf}
-
-\begingroup \boldf Figure S6. Principal component analysis of mouse tissue DNAm data. \endgroup The first two principal components of the top 30,000 variable CpGs are shown for the age study.
+\newpage
 
 \newpage 
 
-\invisiblesection{Table S1. Datasets and accession numbers used in this study.}
+<!-- \invisiblesection{Supplementary Data 1. Datasets and accession numbers used in this study.} -->
 
-```{r s.table1}
-load(here("3-evaluation/3-output/data.Rdata"))
+<!-- ```{r s.table1} -->
+<!-- load(here("3-evaluation/3-output/data.Rdata")) -->
 
-s1 <- data |> 
-  dplyr::filter(!(group == "OSK reprogramming" & accession == "NA") & accession != "GSE147436") |> 
-  group_by(group, celltype, accession) |>
-  reframe(n_control = sum(type %in% c("Control", "Never smoker", "Control (WT)", "Control (BRCA)")),
-          n_case = sum(!type %in% c("Control", "Never smoker", "Control (WT)", "Control (BRCA)"))) |> 
-  arrange(group, celltype, accession) |> 
-  ungroup() |> 
-  dplyr::mutate(repository = case_when(grepl("GSE", accession) ~ "NCBI GEO",
-                                       grepl("EGAS", accession) ~ "EGA",
-                                       grepl("TCGA", accession) ~ "TCGA",
-                                       grepl("NA", accession) ~ "NA"),
-                celltype = gsub("breast tissue", "breast", celltype)) |> 
-  dplyr::add_row(group = 'proliferation',
-                 repository = 'NCBI GEO',
-                 celltype = 'iliac vein',
-                 accession = 'GSE197512',
-                 n_control = 12,
-                 n_case = 12) |> 
-  dplyr::add_row(group = 'proliferation',
-                 repository = 'NCBI GEO',
-                 celltype = 'skin, arm',
-                 accession = 'GSE197512',
-                 n_control = 6,
-                 n_case = 6) |> 
-  dplyr::add_row(group = 'mouse methylation',
-                 repository = 'NCBI GEO',
-                 celltype = 'mammary gland',
-                 accession = 'GSE236260',
-                 n_control = 18,
-                 n_case = 17) |> 
-  dplyr::add_row(group = 'mouse methylation',
-                 repository = 'NCBI GEO',
-                 celltype = 'cervix',
-                 accession = 'GSE236260',
-                 n_control = 18,
-                 n_case = 17) |> 
-  dplyr::add_row(group = 'mouse methylation',
-                 repository = 'NCBI GEO',
-                 celltype = 'PBMCs',
-                 accession = 'GSE236260',
-                 n_control = 18,
-                 n_case = 17) |> 
-  dplyr::select(group, repository, celltype, accession, n_control, n_case) |> 
-  dplyr::mutate(stage = case_when(group == 'proliferation' & celltype == 'skin, sacrum' ~ 'discovery (proliferation assocation)/validation',
-                                  group == 'proliferation' & celltype != 'skin, sacrum' ~ 'discovery (proliferation association)',
-                                  group == 'senescence' ~ 'discovery (senescence association)/validation',
-                                  group == 'current cancer;surrogate tissue' & celltype == 'cervical sample' ~ 'discovery (age correlation, controls only)/validation',
-                                  TRUE ~ 'validation')) |> 
-  write.table(file = here("0-data/Table-S1.txt"),
-              sep = "\t", quote = F, row.names = F)
-```
+<!-- s1 <- data |>  -->
+<!--   dplyr::filter(!(group == "OSK reprogramming" & accession == "NA") & accession != "GSE147436") |>  -->
+<!--   group_by(group, celltype, accession) |> -->
+<!--   reframe(n_control = sum(type %in% c("Control", "Never smoker", "Control (WT)", "Control (BRCA)")), -->
+<!--           n_case = sum(!type %in% c("Control", "Never smoker", "Control (WT)", "Control (BRCA)"))) |>  -->
+<!--   arrange(group, celltype, accession) |>  -->
+<!--   ungroup() |>  -->
+<!--   dplyr::mutate(repository = case_when(grepl("GSE", accession) ~ "NCBI GEO", -->
+<!--                                        grepl("EGAS", accession) ~ "EGA", -->
+<!--                                        grepl("TCGA", accession) ~ "TCGA", -->
+<!--                                        grepl("NA", accession) ~ "NA"), -->
+<!--                 celltype = gsub("breast tissue", "breast", celltype)) |>  -->
+<!--   dplyr::add_row(group = 'proliferation', -->
+<!--                  repository = 'NCBI GEO', -->
+<!--                  celltype = 'iliac vein', -->
+<!--                  accession = 'GSE197512', -->
+<!--                  n_control = 12, -->
+<!--                  n_case = 12) |>  -->
+<!--   dplyr::add_row(group = 'proliferation', -->
+<!--                  repository = 'NCBI GEO', -->
+<!--                  celltype = 'skin, arm', -->
+<!--                  accession = 'GSE197512', -->
+<!--                  n_control = 6, -->
+<!--                  n_case = 6) |>  -->
+<!--   dplyr::add_row(group = 'mouse methylation', -->
+<!--                  repository = 'NCBI GEO', -->
+<!--                  celltype = 'mammary gland', -->
+<!--                  accession = 'GSE236260', -->
+<!--                  n_control = 18, -->
+<!--                  n_case = 17) |>  -->
+<!--   dplyr::add_row(group = 'mouse methylation', -->
+<!--                  repository = 'NCBI GEO', -->
+<!--                  celltype = 'cervix', -->
+<!--                  accession = 'GSE236260', -->
+<!--                  n_control = 18, -->
+<!--                  n_case = 17) |>  -->
+<!--   dplyr::add_row(group = 'mouse methylation', -->
+<!--                  repository = 'NCBI GEO', -->
+<!--                  celltype = 'PBMCs', -->
+<!--                  accession = 'GSE236260', -->
+<!--                  n_control = 18, -->
+<!--                  n_case = 17) |>  -->
+<!--   dplyr::select(group, repository, celltype, accession, n_control, n_case) |>  -->
+<!--   dplyr::mutate(stage = case_when(group == 'proliferation' & celltype == 'skin, sacrum' ~ 'discovery (proliferation assocation)/validation', -->
+<!--                                   group == 'proliferation' & celltype != 'skin, sacrum' ~ 'discovery (proliferation association)', -->
+<!--                                   group == 'senescence' ~ 'discovery (senescence association)/validation', -->
+<!--                                   group == 'current cancer;surrogate tissue' & celltype == 'cervical sample' ~ 'discovery (age correlation, controls only)/validation', -->
+<!--                                   TRUE ~ 'validation'))  -->
 
-\begingroup \boldf Table S1. Datasets and accession numbers used in this study. \endgroup See .txt for Supplementary Table 1.
+<!-- # s1 |>  -->
+<!-- #   write.table(file = here("0-data/Table-S1.txt"), -->
+<!-- #               sep = "\t", quote = F, row.names = F) -->
 
-\invisiblesection{Table S2. Overview of CpGs in age signatures defined in the current study.}
 
-```{r, eval = F}
-coefs <- list.files("3-evaluation/1-output", full.names = T, pattern = "*.Rds")
-coefnames <- gsub(".Rds", "", basename(coefs))
-out <- vector(mode = "list", length = length(coefs))
-names(out) <- paste0("idx_", coefnames)
-  
-library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
+<!-- s1 |> kableExtra::kbl(booktabs = T,latex_options = "scale_down") |>  -->
+<!--   kableExtra::kable_styling(font_size = 8) -->
+<!-- ``` -->
 
-for (i in 1:length(out)){
-  
-  cat(i, "/ 22\n")
-  
-    wx <- readRDS(coefs[i])
-    index = names(out)[i]
-    
-    tmp <- as.data.frame(getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b4.hg19, lociNames = names(wx))) |> 
-      dplyr::select(chr, pos, Name, Relation_to_Island, UCSC_RefGene_Name, UCSC_RefGene_Group) |> 
-      dplyr::mutate(hg = 'hg19',
-                    clock = gsub("idx_", "", names(out)[i])) |> 
-      dplyr::relocate(Name)
-    
-    tmp$weight_clock <- wx[match(tmp$Name, names(wx))]
-    rownames(tmp) <- NULL
-    
-    if(i == 1){
-      dat <- tmp
-    } else {
-      dat <- rbind(dat, tmp)
-    }
-}
+<!-- \begingroup \boldf Suppelmentary Data 1. Datasets and accession numbers used in this study. \endgroup -->
 
-write.table(dat, file = "0-data/Table-S2.csv", quote = F, sep = ",", row.names = F)
+<!-- \invisiblesection{Supplementary Data 2. CpG Overlap criteria.} -->
 
-```
+<!-- \invisiblesection{Supplementary Data 3. Reference and comparison groups in Figure 3.} -->
 
-\begingroup \boldf Table S2. Overview of CpGs in age signatures defined in the current study. \endgroup See .csv file for Table S2.
+<!-- \invisiblesection{Supplementary Data 4. Overview of CpGs in age signatures defined in the current study.} -->
 
-\invisiblesection{Table S3. CpGs associated with senescence in the current study.}
+<!-- ```{r, eval = F} -->
+<!-- coefs <- list.files("3-evaluation/1-output", full.names = T, pattern = "*.Rds") -->
+<!-- coefnames <- gsub(".Rds", "", basename(coefs)) -->
+<!-- out <- vector(mode = "list", length = length(coefs)) -->
+<!-- names(out) <- paste0("idx_", coefnames) -->
 
-```{r, eval = F}
-load("1-functional-association/1-senescence/3-output/coef.Rdata")
+<!-- library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19) -->
 
-library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
-library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+<!-- for (i in 1:length(out)){ -->
 
-# Remove any chrX/Y CpGs
-anno_epic <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
-anno_450k <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-chrX_Y <- unique(c(anno_epic[anno_epic$chr%in% c("chrX", "chrY"),]$Name,
-                   anno_450k[anno_450k$chr%in% c("chrX", "chrY"),]$Name))
+<!--   cat(i, "/ 22\n") -->
 
-sen <- df |> 
-  dplyr::filter(!cg %in% chrX_Y) |> 
-  dplyr::mutate(padj = p.adjust(p, method = "fdr")) |> 
-  dplyr::filter(padj < 0.05)
+<!--     wx <- readRDS(coefs[i]) -->
+<!--     index = names(out)[i] -->
 
-tmp <- as.data.frame(getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19, lociNames = sen$cg)) |> 
-      dplyr::select(chr, pos, Name, Relation_to_Island, UCSC_RefGene_Name, UCSC_RefGene_Group) |> 
-      dplyr::mutate(hg = 'hg19') |> 
-      dplyr::relocate(Name)
+<!--     tmp <- as.data.frame(getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b4.hg19, lociNames = names(wx))) |>  -->
+<!--       dplyr::select(chr, pos, Name, Relation_to_Island, UCSC_RefGene_Name, UCSC_RefGene_Group) |>  -->
+<!--       dplyr::mutate(hg = 'hg19', -->
+<!--                     clock = gsub("idx_", "", names(out)[i])) |>  -->
+<!--       dplyr::relocate(Name) -->
 
-sen <- sen[match(tmp$Name, sen$cg),]
+<!--     tmp$weight_clock <- wx[match(tmp$Name, names(wx))] -->
+<!--     rownames(tmp) <- NULL -->
 
-tmp$coef <- sen$coef
-tmp$pval <- sen$p
-tmp$pval_adj <- sen$padj    
-rownames(tmp) <- NULL
+<!--     if(i == 1){ -->
+<!--       dat <- tmp -->
+<!--     } else { -->
+<!--       dat <- rbind(dat, tmp) -->
+<!--     } -->
+<!-- } -->
 
-write.table(tmp, file = "0-data/Table-S3.csv", quote = F, sep = ",", row.names = F)
-```
+<!-- write.table(dat, file = "0-data/Table-S2.csv", quote = F, sep = ",", row.names = F) -->
 
-\begingroup \boldf Table S3. CpGs associated with senescence in the current study. \endgroup See .csv file for Table S3.
+<!-- ``` -->
 
-\invisiblesection{Table S4. CpGs associated with proliferation in the current study.}
+<!-- \begingroup \boldf Supplementary Data 4. Overview of CpGs in age signatures defined in the current study. \endgroup -->
 
-```{r, eval = F}
-load("1-functional-association/2-proliferation/3-output/coef.Rdata")
+<!-- \invisiblesection{Supplementary Data 5. CpGs associated with senescence in the current study.} -->
 
-library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
-library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+<!-- ```{r, eval = F} -->
+<!-- load("1-functional-association/1-senescence/3-output/coef.Rdata") -->
 
-# Remove any chrX/Y CpGs
-anno_epic <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
-anno_450k <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-chrX_Y <- unique(c(anno_epic[anno_epic$chr%in% c("chrX", "chrY"),]$Name,
-                   anno_450k[anno_450k$chr%in% c("chrX", "chrY"),]$Name))
+<!-- library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19) -->
+<!-- library(IlluminaHumanMethylation450kanno.ilmn12.hg19) -->
 
-pro <- df |> 
-  dplyr::filter(!cg %in% chrX_Y) |> 
-  dplyr::mutate(padj = p.adjust(p, method = "fdr")) |> 
-  dplyr::filter(padj < 0.05) |> 
-  # invert coefficient so direction is more intuitive
-  dplyr::mutate(coef = coef*-1)
+<!-- # Remove any chrX/Y CpGs -->
+<!-- anno_epic <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19) -->
+<!-- anno_450k <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19) -->
+<!-- chrX_Y <- unique(c(anno_epic[anno_epic$chr%in% c("chrX", "chrY"),]$Name, -->
+<!--                    anno_450k[anno_450k$chr%in% c("chrX", "chrY"),]$Name)) -->
 
-tmp <- as.data.frame(getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19, lociNames = pro$cg)) |> 
-      dplyr::select(chr, pos, Name, Relation_to_Island, UCSC_RefGene_Name, UCSC_RefGene_Group) |> 
-      dplyr::mutate(hg = 'hg19') |> 
-      dplyr::relocate(Name)
+<!-- sen <- df |>  -->
+<!--   dplyr::filter(!cg %in% chrX_Y) |>  -->
+<!--   dplyr::mutate(padj = p.adjust(p, method = "fdr")) |>  -->
+<!--   dplyr::filter(padj < 0.05) -->
 
-pro <- pro[match(tmp$Name, pro$cg),]
+<!-- tmp <- as.data.frame(getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19, lociNames = sen$cg)) |>  -->
+<!--       dplyr::select(chr, pos, Name, Relation_to_Island, UCSC_RefGene_Name, UCSC_RefGene_Group) |>  -->
+<!--       dplyr::mutate(hg = 'hg19') |>  -->
+<!--       dplyr::relocate(Name) -->
 
-tmp$coef <- pro$coef
-tmp$pval <- pro$p
-tmp$pval_adj <- pro$padj    
-rownames(tmp) <- NULL
+<!-- sen <- sen[match(tmp$Name, sen$cg),] -->
 
-write.table(tmp, file = "0-data/Table-S4.csv", quote = F, sep = ",", row.names = F)
-```
+<!-- tmp$coef <- sen$coef -->
+<!-- tmp$pval <- sen$p -->
+<!-- tmp$pval_adj <- sen$padj     -->
+<!-- rownames(tmp) <- NULL -->
 
-\begingroup \boldf Table S4. CpGs associated with proliferation in the current study. \endgroup See .csv file for Table S4.
+<!-- write.table(tmp, file = "0-data/Table-S3.csv", quote = F, sep = ",", row.names = F) -->
+<!-- ``` -->
 
-\invisiblesection{Table S5. PCGT-associated CpGs in the current study.}
+<!-- \begingroup \boldf Supplmentary Data 5. CpGs associated with senescence in the current study. \endgroup See .csv file for Table S3. -->
 
-```{r, eval = F}
-load("1-functional-association/3-pcgt/1-output/pcgt_cpgs_tss200_fetalzero.Rdata")
+<!-- \invisiblesection{Supplementary Data 6. CpGs associated with proliferation in the current study.} -->
 
-library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
-library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+<!-- ```{r, eval = F} -->
+<!-- load("1-functional-association/2-proliferation/3-output/coef.Rdata") -->
 
-# Remove any chrX/Y CpGs
-anno_epic <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
-anno_450k <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-chrX_Y <- unique(c(anno_epic[anno_epic$chr%in% c("chrX", "chrY"),]$Name,
-                   anno_450k[anno_450k$chr%in% c("chrX", "chrY"),]$Name))
+<!-- library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19) -->
+<!-- library(IlluminaHumanMethylation450kanno.ilmn12.hg19) -->
 
-pcgt <- pcgt_cpgs_tss200_fetalzero |> 
-  as.data.frame() |> 
-  dplyr::filter(!Name %in% chrX_Y)
+<!-- # Remove any chrX/Y CpGs -->
+<!-- anno_epic <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19) -->
+<!-- anno_450k <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19) -->
+<!-- chrX_Y <- unique(c(anno_epic[anno_epic$chr%in% c("chrX", "chrY"),]$Name, -->
+<!--                    anno_450k[anno_450k$chr%in% c("chrX", "chrY"),]$Name)) -->
 
-tmp <- as.data.frame(getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19, lociNames = pcgt$Name)) |> 
-      dplyr::select(chr, pos, Name, Relation_to_Island, UCSC_RefGene_Name, UCSC_RefGene_Group) |> 
-      dplyr::mutate(hg = 'hg19') |> 
-      dplyr::relocate(Name)
-rownames(tmp) <- NULL
+<!-- pro <- df |>  -->
+<!--   dplyr::filter(!cg %in% chrX_Y) |>  -->
+<!--   dplyr::mutate(padj = p.adjust(p, method = "fdr")) |>  -->
+<!--   dplyr::filter(padj < 0.05) |>  -->
+<!--   # invert coefficient so direction is more intuitive -->
+<!--   dplyr::mutate(coef = coef*-1) -->
 
-write.table(tmp, file = "0-data/Table-S5.csv", quote = F, sep = ",", row.names = F)
-```
+<!-- tmp <- as.data.frame(getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19, lociNames = pro$cg)) |>  -->
+<!--       dplyr::select(chr, pos, Name, Relation_to_Island, UCSC_RefGene_Name, UCSC_RefGene_Group) |>  -->
+<!--       dplyr::mutate(hg = 'hg19') |>  -->
+<!--       dplyr::relocate(Name) -->
 
-\begingroup \boldf Table S5. PCGT-associated CpGs in the current study. \endgroup See .csv file for Table S5.
+<!-- pro <- pro[match(tmp$Name, pro$cg),] -->
 
-\invisiblesection{Table S6. Reference and comparison groups in Figure 3.}
+<!-- tmp$coef <- pro$coef -->
+<!-- tmp$pval <- pro$p -->
+<!-- tmp$pval_adj <- pro$padj     -->
+<!-- rownames(tmp) <- NULL -->
 
-\begingroup \boldf Table S7. Reference and comparison groups in Figure 3. \endgroup See .xlsx for Table S6.
+<!-- write.table(tmp, file = "0-data/Table-S4.csv", quote = F, sep = ",", row.names = F) -->
+<!-- ``` -->
 
-\invisiblesection{Table S7. CpG Overlap criteria.}
+<!-- \begingroup \boldf Supplementary Data 6. CpGs associated with proliferation in the current study. \endgroup  -->
 
-\begingroup \boldf Table S7. CpG Overlap criteria. \endgroup See .xlsx for Table S7.
+<!-- \invisiblesection{Supplementary Data 7. PCGT-associated CpGs in the current study.} -->
+
+<!-- ```{r, eval = F} -->
+<!-- load("1-functional-association/3-pcgt/1-output/pcgt_cpgs_tss200_fetalzero.Rdata") -->
+
+<!-- library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19) -->
+<!-- library(IlluminaHumanMethylation450kanno.ilmn12.hg19) -->
+
+<!-- # Remove any chrX/Y CpGs -->
+<!-- anno_epic <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19) -->
+<!-- anno_450k <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19) -->
+<!-- chrX_Y <- unique(c(anno_epic[anno_epic$chr%in% c("chrX", "chrY"),]$Name, -->
+<!--                    anno_450k[anno_450k$chr%in% c("chrX", "chrY"),]$Name)) -->
+
+<!-- pcgt <- pcgt_cpgs_tss200_fetalzero |>  -->
+<!--   as.data.frame() |>  -->
+<!--   dplyr::filter(!Name %in% chrX_Y) -->
+
+<!-- tmp <- as.data.frame(getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19, lociNames = pcgt$Name)) |>  -->
+<!--       dplyr::select(chr, pos, Name, Relation_to_Island, UCSC_RefGene_Name, UCSC_RefGene_Group) |>  -->
+<!--       dplyr::mutate(hg = 'hg19') |>  -->
+<!--       dplyr::relocate(Name) -->
+<!-- rownames(tmp) <- NULL -->
+
+<!-- write.table(tmp, file = "0-data/Table-S5.csv", quote = F, sep = ",", row.names = F) -->
+<!-- ``` -->
+
+<!-- \begingroup \boldf Supplementary Data 7. PCGT-associated CpGs in the current study. \endgroup  -->
+\newpage 
+
+\invisiblesection{Supplementary File 1. Animation to explain positive AUC based on thresholds.}
+
+\begingroup \boldf Supplementary File 1. Animation to explain positive AUC based on thresholds. \endgroup See additional .gif file.
+
+\invisiblesection{Supplementary File 2. Animation to explain a negative AUC based on thresholds.}
+
+\begingroup \boldf Supplementary File 2. Animation to explain a negative AUC based on thresholds. \endgroup See additional .gif file.
 
 
 

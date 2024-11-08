@@ -140,3 +140,15 @@ pheno <- pheno |>
 
 pheno <- cbind(pheno, res)
 save(pheno, file = "3-evaluation/2-additional-downloads/3-pathological-response/1-output/pheno_clean.Rdata")
+
+
+load("3-evaluation/2-additional-downloads/3-pathological-response/1-output/pheno_clean.Rdata")
+load("~/Documents/Work/data.nosync/GEO/GSE184159/beta.Rdata")
+
+identical(rownames(pheno), colnames(beta))
+source("0-data/src/beta_params.R")
+tmp <- beta_params(beta)
+
+pheno_min <- pheno |> dplyr::select(-any_of(colnames(tmp)))
+pheno <- cbind(pheno_min, tmp)
+save(pheno, file = "3-evaluation/2-additional-downloads/3-pathological-response/1-output/pheno_clean.Rdata")

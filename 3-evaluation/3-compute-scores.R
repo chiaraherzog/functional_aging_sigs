@@ -1,6 +1,6 @@
 # Compute scores
 
-setwd("~/Dropbox/eca/sola/7-manuscript/manuscript/molecular-aging-sigs/")
+setwd("~/Dropbox/eca/sola/7-manuscript/manuscript/functional_aging_sigs/")
 # libraries
 library(dplyr)
 source("0-data/src/beta_params.R")
@@ -13,8 +13,8 @@ load("~/Dropbox/eca/sola/1-download/2-output/data.Rdata")
 
 # Keep those with at least 5 normal samples
 n <- data |> 
-  group_by(project, type) |>
-  count() |> 
+  dplyr::group_by(project, type) |>
+  dplyr::count() |> 
   tidyr::pivot_wider(id_cols = "project",
                      names_from = type, values_from = n) |> 
   dplyr::filter(Control >=5)
@@ -31,7 +31,7 @@ tmpdat <- data |>
 # get beta
 projects <- c(unique(n$project), "TCGA-OV", "TCGA-CESC")
 # directory <- "<your download directory>/"
-directory <- "~/Documents/Work/data.nosync/tcga_sola/"
+directory <- "~/Dropbox/data/tcga/"
 
 for (p in projects){
   cat("Starting ", p, "...")

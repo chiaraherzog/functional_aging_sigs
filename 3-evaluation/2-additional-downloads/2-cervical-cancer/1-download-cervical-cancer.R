@@ -118,7 +118,7 @@ pheno |>
   geom_point()
 
 # compute indices
-source("0-data/src/beta_params.R")
+source("~/Dropbox/eca/sola/7-manuscript/manuscript/functional_aging_sigs/0-data/src/beta_params.R")
 res <- beta_params(beta)
 identical(rownames(res), rownames(pheno))
 pheno <- cbind(pheno, res)
@@ -133,4 +133,12 @@ p <- pheno |>
   dplyr::select(group, accession, celltype, type, id, any_of(colnames(as.data.frame(res))))
 pheno <- p
 
+save(pheno, file = "3-evaluation/2-additional-downloads/2-cervical-cancer/1-output/pheno_cervical.Rdata")
+identical(colnames(beta), rownames(pheno))
+setwd("~/Dropbox/eca/sola/7-manuscript/manuscript/functional_aging_sigs/")
+source("0-data/src/beta_params.R")
+tmp <- beta_params(beta)
+
+pheno_min <- pheno |> dplyr::select(-any_of(colnames(tmp)))
+pheno <- cbind(pheno_min, tmp)
 save(pheno, file = "3-evaluation/2-additional-downloads/2-cervical-cancer/1-output/pheno_cervical.Rdata")

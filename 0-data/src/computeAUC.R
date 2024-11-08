@@ -25,7 +25,8 @@ computeAUC <- function(data,
                "idx_PROepi_neg", "idx_PROimm_neg", "idx_PROgen_neg", "idx_PROpure_neg",
                "idx_PROnonage",
                "idx_SENepi", "idx_SENimm", "idx_SENgen", "idx_SENpure", "idx_SENnonage",
-               "hannum", "horvath", "phenoage")
+               "hannum", "horvath", "phenoage",
+               "DNAmGrimAgeV2", "CausAge", "DamAge", "AdaptAge")
   
   # helper functions
   source("0-data/src/adjust_age.R")
@@ -123,7 +124,10 @@ computeAUC <- function(data,
       dplyr::filter(type %in% c("Control", c)) |> 
       droplevels() |> 
       dplyr::group_by(index) |> 
-      dplyr::do(tidy(wilcox.test(value ~ type, data = ., paired = paired)))
+      dplyr::do(tidy(wilcox.test(
+        .$value[.$type == "Control"], 
+        .$value[.$type == c], 
+        paired = paired)))
     
     
     for (i in 1:length(indices)){

@@ -1,5 +1,5 @@
 ---
-title: "Functional dissection of cell type-specific epigenetic changes in aging"
+title: "Functionally enriched epigenetic clocks reveal tissue-specific discordant aging patterns in individuals with cancer"
 author: "Main Figures"
 date: ""
 link-citations: true
@@ -147,6 +147,11 @@ pdf(here("4-display-elements/panels/2a.pdf"), width = 10, height = 6.5)
 print(a)
 dev.off()
 
+# Source data
+source_2a <- ggplot_build(a)$data[[1]]
+write.csv(source_2a, file = "4-display-elements/source-data/2a.csv",row.names = F)
+
+
 # b: Co-correlation --------
 tmp <- data |>
   dplyr::filter(group == "current cancer;surrogate tissue" & type == "Control" & ((celltype == "blood sample" & ic > 0.9) | (celltype != "blood sample" & ic < 0.2))) |>
@@ -175,6 +180,9 @@ b <- Heatmap(mat,
 pdf(here("4-display-elements/panels/2b.pdf"), width = 7, height = 6)
 draw(b)
 dev.off()
+
+# Source data
+write.csv(b@matrix, file = "4-display-elements/source-data/2b.csv",row.names = F)
 
 # Reprogramming -----------------
 load(here("3-evaluation/3-output/data.Rdata"))
@@ -229,6 +237,9 @@ pdf(here("4-display-elements/panels/2c.pdf"), width = 9, height = 13)
 print(c)
 dev.off()
 
+# Source data
+source_2c <- ggplot_build(c)$data[[1]]
+write.csv(source_2c, file = "4-display-elements/source-data/2c.csv",row.names = F)
 ```
 
 \begin{center}
@@ -252,6 +263,9 @@ dat <- rbind(dat_osk1, dat_prol, dat_sen, dat_age_cerv, dat_age_buccal, dat_age_
              dat_cur_sur, 
              # dat_future_sur,
              dat_mort_blood, dat_mort_c_blood)
+
+dat <- dat |>
+  dplyr::mutate(p = p.adjust(p, method = 'fdr'))
 
 # brng into the right shape for plotting as a matrix
 tmp1 <- dat |>
@@ -310,7 +324,7 @@ tmp1 <- dat |>
                                  group == "senescence" & grepl("fibroblast", celltype) ~ type,
                                  group == "normal aging" ~ "Post-menopausal sample",
                                  TRUE ~ "Comp"))
-mat1 <- tmp1[,6:30]
+mat1 <- tmp1[,6:34]
 rownames(mat1) <- tmp1$label
 
 # Transform sigmat
@@ -323,13 +337,17 @@ tmp2 <- dat |>
                 index = gsub("phenoage", "PhenoAge", index)) |>
   dplyr::rowwise() |>
   dplyr::mutate(aucsig = ifelse(all(c(auc, cilo, cihi) > 0.5) | all(c(auc, cilo, cihi) < 0.5),
+                                gtools::stars.pval(p),
+                                ""),
+                aucsig = ifelse(grepl("*", aucsig, fixed = T),
                                 "*",
-                                "")) |>
+                                ifelse(grepl(".", aucsig, fixed = T),
+                                       "", aucsig))) |>
   ungroup() |>
   tidyr::pivot_wider(id_cols = c(group, celltype, type, n_control, n_case),
                      names_from = "index",
                      values_from = "aucsig")
-mat2 <- tmp2[,6:30]
+mat2 <- tmp2[,6:34]
 
 cols <- MetBrewer::met.brewer("Hiroshige", n = 12)
 cols1 <- MetBrewer::met.brewer("Hokusai1", n = 9)
@@ -429,7 +447,10 @@ grDevices::cairo_pdf(here("4-display-elements/panels/heatmap.pdf"), width = 11, 
 draw(map)
 dev.off()
 
-# heatmap is annotated in illustrator (labels)
+# heatmap is annotated in illustrator (labels)]
+
+# Source data
+write.csv(map@matrix, file = "4-display-elements/source-data/3.csv",row.names = F)
 ```
 
 \begin{center}
@@ -530,13 +551,71 @@ plot <- pheno |>
     aspect.ratio = 1.3
   )
 
-plot
+
+# plot <- pheno |>
+#   ggplot(
+#     aes(x=type3, y=value)
+#     ) +
+#   ggbeeswarm::geom_beeswarm(
+#     aes(colour = type3,
+#         shape = tumour_status),
+#     size = 2
+#     ) +
+#   geom_boxplot(
+#     aes(fill = type3),
+#     alpha = 0.7,
+#     outlier.shape = NA
+#     ) +
+#   facet_grid(
+#     index~tissue,
+#     switch = "y",
+#     scales = "free_y"
+#     ) +
+#   ggpubr::stat_compare_means(
+#     ref.group = 'Control',
+#     label.x.npc = 0.1,
+#     label = 'p.format',
+#     label.y.npc = 0.95,
+#     size = 2.5
+#     # comparisons = list(c("Control", "Cancer case"),
+#     #                    c("Carcinogen exposure with unsuccessful preventive measure", "Carcinogen exposure with successful preventive measure"),
+#     #                    c("Cancer case", "Carcinogen exposure with successful preventive measure"),
+#     #                    c("Control", "Preventive measure only")
+#     #                    )
+#     # ,
+#     #                    c("Cancer case", "Carcinogen exposure with successful prevention"),
+#     #                    c("Control", "Preventive measure only"))
+#   ) +
+#   labs(
+#     x = "",
+#     y = ""
+#   ) +
+#   scale_colour_manual(
+#     values = cols1[c(8, 1, 4, 6, 7)],
+#     aesthetics = c("colour", "fill"),
+#     name = ""
+#     ) +
+#   scale_shape_manual(
+#     values = c(1, 19),
+#     name = ""
+#   ) +
+#   guides(color = guide_legend(nrow = 5),
+#          shape = guide_legend(nrow = 2)) +
+#   theme(
+#     legend.position = 'bottom'
+#   )
+# 
+# plot
 
 grDevices::cairo_pdf(file = here("4-display-elements/panels/4b.pdf"),
        width = 13, 
        height = 5)
 print(plot)
 dev.off()
+
+# Source data
+source_4b <- ggplot_build(plot)$data[[1]]
+write.csv(source_4b, file = "4-display-elements/source-data/4b.csv",row.names = F)
 ```
 
 

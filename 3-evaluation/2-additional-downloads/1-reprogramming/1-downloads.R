@@ -62,8 +62,6 @@ identical(rownames(dat), rownames(pheno))
 # Compute
 pheno <- cbind(pheno, dat)
 
-pheno$title
-
 # Tidy: 
 pheno <- pheno |> 
   dplyr::mutate(type = case_when(`cell type:ch1` == "Human dermal fibroblast" ~ "Control",
